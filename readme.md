@@ -1,0 +1,1 @@
+This project aims build CNN netowrk from scretc with only numpy.
