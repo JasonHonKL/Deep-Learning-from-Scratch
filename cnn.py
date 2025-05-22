@@ -27,18 +27,27 @@ class CNN:
 
 class Conv2D:
     """
+        Expected Outpu Dimension: 
+        H_out: floor(H_in + 2 x padding[0] - dilation[0] x (kernel[0] -1) -1)/ stride[0]) +  1
+        W_out: floor(W_in + 2 x padding[0] -dilation[0] x (kernel[0] -1)-1)/stride[0]) + 1 
+    """
+    def __init__(self ,input_channel:int|tuple , output_channel:int|tuple , kernel_size:int , stride:int = 0 , padding:int = 0):
+        self.kernel_size = kernel_size
+        self.input_channel = input_channel
+
+        self.weight = np.random.rand(output_channel , input_channel , kernel_size , kernel_size)
+
+    """
         N: batch size 
         C_in: Number of channel
         H: height input 
         W: width input 
-
-        Expected Outpu Dimension: 
-        H_out: floor(H_in + 2 x padding[0] - dilation[0] x (kernel[0] -1) -1)/ stride[0] +  1
     """
-    def __init__(self , n:int , c:int , h:int , w:int , stride:int = 0 , padding:int = 0):
-        pass
+    def forward(self , x):
+        """
+            x_shape = N x c_in x H x W 
+        """
 
-    def forward(self):
         pass 
 
 
