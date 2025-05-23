@@ -68,7 +68,7 @@ class MultiHeadSelfAttention:
         self.b_v = np.zeros(embedding_dim)
         self.b_o = np.zeros(embedding_dim)
 
-    def forward(self , x):
+    def forward(self , x , mask=None):
         batch_size , seq_len , _ = x.shape
         
         Q = np.dot(x , self.W_q) + self.b_q
@@ -81,6 +81,9 @@ class MultiHeadSelfAttention:
 
         scores = np.matmul(Q , K.transpose(0,1,3,2))/np.sqrt(self.head_dim)
         #softmax
+        if mask is not None:
+            scores = scores + mask 
+
         weights = np.exp(scores - np.max(scores, axis=-1, keepdims=True))
         weights = weights / np.sum(weights, axis=-1, keepdims=True)  # (batch_size, num_heads, seq_len, seq_len)
         attention = np.matmul(weights, V)  # (batch_size, num_heads, seq_len, head_dim)
@@ -133,5 +136,15 @@ class MultiHeadSelfAttention:
         
         return d_x, (d_W_q, d_W_k, d_W_v, d_W_o, d_b_q, d_b_k, d_b_v, d_b_o)
     
+def create_causal_mask(seq_len):
+    """Create a causal mask for decoder self-attention.
+    
+    Args:
+        seq_len (int): Length of the sequence.
+    
+    Returns:
+        np.ndarray: Mask of shape (1, 1, seq_len, seq_len).
+    """
+    mask = np.triu(np.ones((seq_len, seq_len)), k=1) * (-1e9)
+    return mask[None, None, :, :]  
 
-# Dataset
