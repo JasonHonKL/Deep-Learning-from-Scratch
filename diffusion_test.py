@@ -1,40 +1,21 @@
-from diffusion import MLP
+from diffusion import Diffusion
 import numpy as np
 
-np.random.seed(42)
-N = 2000  # number of samples
 
-# Inputs: x and z (shape: N x 2)
-x = np.random.uniform(-2, 2, size=(N, 1))
-z = np.random.uniform(-2, 2, size=(N, 1))
-X = np.hstack([x, z])  # shape (N, 2)
+diff = Diffusion()
+x = np.array([1.0, 2.0, 3.0])  # example input
+t = 1000  # timestep
 
-# True output with noise
-noise = 0.1 * np.random.randn(N, 1)
-y_true = (x ** 2) + z + noise  # shape (N, 1)
+x_t_loop, gamma_t_loop = diff.forward(x, t)
 
-# Initialize model
-model = MLP()
+# Calculate gamma_t using power function directly
+gamma_t_power = diff.gamma ** t
 
-# Training loop
-epochs = 100
+print(f"Gamma_t from loop: {gamma_t_loop}")
+print(f"Gamma_t from power: {gamma_t_power}")
+print(f"Difference: {abs(gamma_t_loop - gamma_t_power)}")
 
-for epoch in range(epochs):
-    # Forward pass
-    y_pred = model.forward(X)  # shape (N, 1)
+# Check if gamma_t_loop and gamma_t_power are almost equal
+assert np.isclose(gamma_t_loop, gamma_t_power), "Gamma_t values do not match!"
 
-    # Compute mean squared error loss and gradient
-    loss = np.mean((y_pred - y_true)**2)
-    grad_loss = 2 * (y_pred - y_true) / N  # gradient of MSE loss w.r.t predictions
-
-    # Backward pass
-    model.backward(grad_loss)
-
-    if (epoch + 1) % 10 == 0 or epoch == 0:
-        print(f"Epoch {epoch+1:03d} / {epochs}, Loss: {loss:.6f}")
-
-# Final evaluation
-print("\nTraining complete.")
-print("Sample predictions vs true values:")
-for i in range(5):
-    print(f"Pred: {y_pred[i,0]:.4f}, True: {y_true[i,0]:.4f}")
+print(f"x_t: {x_t_loop}")

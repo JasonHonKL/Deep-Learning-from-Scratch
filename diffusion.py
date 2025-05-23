@@ -95,4 +95,50 @@ class MLP:
         g = self.l1.backward(g)                # Backprop through first linear
         return g
 
-    
+
+class Diffusion:
+    """
+        Out diffusion takes 
+        (x , y) --> (x ,y)
+    """
+    def __init__(self):
+        """
+            Our model would take input (x , t) --> (y) it would be any x , t combination
+            the y is random sampling , i.e it is normally distriabled with x as the mean with 1 std
+        """
+
+        # input dimension should be 2 because 
+        self.l1 = Linear(2 , 4)
+        self.a1 = Sigmoid()
+        self.l2 = Linear(4 ,8)
+        self.a2 = Sigmoid()
+        self.l3 = Linear(8 ,16)
+        self.a3 = Sigmoid()
+        self.l4 = Linear(16 ,1)
+
+        self.beta = 0.1
+        self.gamma = 1 - self.beta # assume constant beta
+
+    def forward(self , x , t):
+        """
+            x at time t: ==> x_t = sqrt(gamma_t)x_0 + sqrt(1-gamma_t) epsilon
+        """
+        gamma_t = 1.0
+        for i in range(t):
+            gamma_t *= self.gamma  # (1 - beta)^t
+
+        epsilon = np.random.normal(0 , 1 , x.shape)
+        x_t = np.sqrt(gamma_t)*x + np.sqrt(1 - gamma_t)*epsilon
+        return x_t , gamma_t
+
+    def backward(self, x , t):
+        """
+            Here we will need to use the nerual netowrk under the diffusion 
+        """
+
+        # we want to predict the noise here
+        for _ in range(t):
+            pass
+
+    def train():
+        pass
