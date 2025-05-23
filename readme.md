@@ -11,4 +11,6 @@ Todo List:
 - [x] ANN / MLP 
 - [] CNN
 - [x] Diffusion with MLP
-- [] Transformer 
+- [x] Transformer 
+    -[] Vision Transformer (if available)
+- [] RNN & LSTM
