@@ -1,21 +1,30 @@
-from diffusion import Diffusion
 import numpy as np
+import matplotlib.pyplot as plt
+from diffusion import Diffusion
+
+# assume MLP, Linear, Sigmoid and Diffusion are defined/imported above
+# from your_module import Diffusion
+
+def main():
+    import numpy as np
+    import matplotlib.pyplot as plt
+
+    # 1) Data ~ N(0,1)
+    data = np.random.normal(0 ,10 ,10000)
+
+    # 2) Train
+    diff = Diffusion(beta=0.1)
+    diff.train(data, epochs=10, T=30, lr=1e-3)
+
+    # 3) Sample
+    samples = diff.sample(T=30, shape=(10000,))
+
+    # 4) Plot
+    plt.hist(data,    bins=100, density=True, alpha=0.5, label='True')
+    plt.hist(samples, bins=100, density=True, alpha=0.5, label='Generated')
+    plt.legend()
+    plt.show()
 
 
-diff = Diffusion()
-x = np.array([1.0, 2.0, 3.0])  # example input
-t = 1000  # timestep
-
-x_t_loop, gamma_t_loop = diff.forward(x, t)
-
-# Calculate gamma_t using power function directly
-gamma_t_power = diff.gamma ** t
-
-print(f"Gamma_t from loop: {gamma_t_loop}")
-print(f"Gamma_t from power: {gamma_t_power}")
-print(f"Difference: {abs(gamma_t_loop - gamma_t_power)}")
-
-# Check if gamma_t_loop and gamma_t_power are almost equal
-assert np.isclose(gamma_t_loop, gamma_t_power), "Gamma_t values do not match!"
-
-print(f"x_t: {x_t_loop}")
+if __name__ == "__main__":
+    main()

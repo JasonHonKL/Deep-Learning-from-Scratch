@@ -19,126 +19,193 @@ import numpy as np
     
 """
 
-"""
-    As usual same, we first build a linear nn ourself as a revision 
-"""
+
 class Linear:
-    def __init__(self , input_dimension:int=1 , output_dimension=1):
-        """
-            usage: W dot x ==> (input , output) . (N , input) --> (N , output)
-        """
-        self.weight = np.random.randn(input_dimension , output_dimension)
-        self.bias = np.random.randn(output_dimension)
+    def __init__(self, input_dimension:int=1, output_dimension:int=1):
+        # weight: (in_dim, out_dim), bias: (out_dim,)
+        self.weight = np.random.randn(input_dimension, output_dimension) * np.sqrt(2/(input_dimension+output_dimension))
+        self.bias   = np.zeros(output_dimension)
 
-    def forward(self,  x):
-        """
-        
-        """
-        self.output = np.einsum('io,ni->no', self.weight, x) + self.bias
-        self.gradient = x 
-        return self.output
-    
-    def backward(self , loss):
-        """
-            This is the backward pass 
-            loss should be the gradient from previous round 
-            back ward pass would return the gradient till here and 
-            Here's some notes for your information
+    def forward(self, x):
+        # x can be shape (in_dim,) or (N, in_dim)
+        x = np.atleast_2d(x)                  # (1, in_dim) or (N, in_dim)
+        self.input = x                       # cache for backward
+        out = x.dot(self.weight) + self.bias # (N, out_dim)
+        return out if out.shape[0]>1 else out[0]
 
-            partial L / partial x ==> 
+    def backward(self, grad_output):
+        # grad_output: (out_dim,) or (N, out_dim)
+        grad = np.atleast_2d(grad_output)    # (N, out_dim)
+        # accumulate gradients
+        self.dW = self.input.T.dot(grad)     # (in_dim, out_dim)
+        self.db = grad.sum(axis=0)           # (out_dim,)
+        # gradient wrt inputs
+        grad_input = grad.dot(self.weight.T) # (N, in_dim)
+        return grad_input if grad_output.ndim>1 else grad_input[0]
 
-        """
-        grad_w = self.gradient.T @ loss
-        grad_input = loss @ self.weight.T
-        grad_bias = loss.sum(axis=0)
-        learning_rate = 0.01
-        self.weight -= learning_rate * grad_w
-        self.bias -= learning_rate * grad_bias.T
 
-        return grad_input # return \partial W / \partial X
-
-        
 class Sigmoid:
-    def __init__(self):
-        pass
-    
-    def forward(self ,x):
-        self.output = self._sig(x)
-        return self.output
+    def forward(self, x):
+        self.out = 1/(1+np.exp(-x))
+        return self.out
 
-    def backward(self , loss):
-        sigmoid_derivative = self.output * (1 - self.output)
-        grad = loss * sigmoid_derivative
-        return grad
-
-    def _sig(self , x):
-        return 1 /(1 + np.exp(-x))
+    def backward(self, grad_output):
+        return grad_output * (self.out*(1-self.out))
 
 
 class MLP:
     def __init__(self):
         self.l1 = Linear(2, 512)
-        self.activation = Sigmoid()
+        self.act = Sigmoid()
         self.l2 = Linear(512, 1)
 
     def forward(self, x):
-        a1 = self.l1.forward(x)                # First linear layer
-        z1 = self.activation.forward(a1)       # Activation after first linear
-        a2 = self.l2.forward(z1)               # Second linear layer
-       # z2 = self.activation.forward(a2)       # Activation after second linear (output)
+        # x: shape (2,) or (N,2)
+        a1 = self.l1.forward(x)
+        z1 = self.act.forward(a1)
+        a2 = self.l2.forward(z1)
         return a2
 
-    def backward(self, loss):
-     #   g = self.activation.backward(loss)    # Backprop through output activation
-        g = self.l2.backward(loss)                # Backprop through second linear
-        g = self.activation.backward(g)       # Backprop through first activation
-        g = self.l1.backward(g)                # Backprop through first linear
-        return g
+    def backward(self, grad_output):
+        # grad_output: shape (1,) or (N,1)
+        g2 = self.l2.backward(grad_output)
+        g1 = self.act.backward(g2)
+        _  = self.l1.backward(g1)
+        # no return needed beyond
+        
+
+class Diffusion:
+    def __init__(self, beta=0.1):
+        self.mlp   = MLP()
+        self.beta  = beta
+        self.gamma = 1 - beta
+
+    def forward_diffuse(self, x0, t):
+        # x0: scalar or array
+        gamma_t = self.gamma**t
+        eps     = np.random.randn(*np.shape(x0))
+        x_t     = np.sqrt(gamma_t)*x0 + np.sqrt(1-gamma_t)*eps
+        return x_t, eps, gamma_t
+
+    def backward_step(self, x_t, t):
+        # predict noise
+        eps_pred = self.mlp.forward(np.stack([x_t, np.full_like(x_t, t)], axis=-1))
+        gamma_t  = self.gamma**t
+        beta_t   = self.beta
+
+        # reverse-mean formula
+        mean = (1/np.sqrt(1-beta_t)) * (x_t - (beta_t/np.sqrt(1-gamma_t)) * eps_pred)
+        if t > 1:
+            noise = np.random.randn(*x_t.shape)
+        else:
+            noise = 0
+        return mean + np.sqrt(beta_t)*noise
+
+    def sample(self, T, shape):
+        x = np.random.randn(*shape)
+        for t in range(T, 0, -1):
+            x = self.backward_step(x, t)
+        return x
+
+    def train(self, data, epochs=100, T=50, lr=1e-3):
+        n = data.shape[0]
+        for ep in range(1, epochs+1):
+            perm, total_loss = np.random.permutation(n), 0.0
+            for i in perm:
+                x0 = data[i]
+                # pick t, diffuse
+                t = np.random.randint(1, T+1)
+                x_t, eps, _ = self.forward_diffuse(x0, t)
+
+                # predict and loss
+                inp      = np.array([x_t, t])
+                eps_pred = self.mlp.forward(inp)
+                loss     = (eps_pred - eps)**2
+                total_loss += loss
+
+                # backprop through MLP
+                grad = 2*(eps_pred - eps)
+                self.mlp.backward(grad)
+
+                # SGD step
+                for layer in (self.mlp.l1, self.mlp.l2):
+                    layer.weight -= lr * layer.dW
+                    layer.bias   -= lr * layer.db
+
+            avg_loss = total_loss / n
+            if ep % 10 == 0 or ep==1:
+                print(f"Epoch {ep:4d}/{epochs} — loss: {avg_loss:.6f}")
 
 
 class Diffusion:
-    """
-        Out diffusion takes 
-        (x , y) --> (x ,y)
-    """
-    def __init__(self):
-        """
-            Our model would take input (x , t) --> (y) it would be any x , t combination
-            the y is random sampling , i.e it is normally distriabled with x as the mean with 1 std
-        """
+    def __init__(self, beta=0.1):
+        self.mlp   = MLP()
+        self.beta  = beta
+        self.gamma = 1 - beta
 
-        # input dimension should be 2 because 
-        self.l1 = Linear(2 , 4)
-        self.a1 = Sigmoid()
-        self.l2 = Linear(4 ,8)
-        self.a2 = Sigmoid()
-        self.l3 = Linear(8 ,16)
-        self.a3 = Sigmoid()
-        self.l4 = Linear(16 ,1)
+    def forward_diffuse(self, x0, t):
+        gamma_t = self.gamma**t
+        eps     = np.random.randn(*np.shape(x0))
+        x_t     = np.sqrt(gamma_t)*x0 + np.sqrt(1-gamma_t)*eps
+        return x_t, eps, gamma_t
 
-        self.beta = 0.1
-        self.gamma = 1 - self.beta # assume constant beta
+    def backward_step(self, x_t, t):
+        # Build an (N,2) input: [x_t, t]
+        xt_col   = np.atleast_1d(x_t).reshape(-1,1)          # (N,1)
+        t_col    = np.full_like(xt_col, fill_value=t, dtype=float)
+        mlp_in   = np.hstack([xt_col, t_col])                # (N,2)
 
-    def forward(self , x , t):
-        """
-            x at time t: ==> x_t = sqrt(gamma_t)x_0 + sqrt(1-gamma_t) epsilon
-        """
-        gamma_t = 1.0
-        for i in range(t):
-            gamma_t *= self.gamma  # (1 - beta)^t
+        # Predict noise
+        eps_pred = self.mlp.forward(mlp_in).reshape(-1)       # (N,)
 
-        epsilon = np.random.normal(0 , 1 , x.shape)
-        x_t = np.sqrt(gamma_t)*x + np.sqrt(1 - gamma_t)*epsilon
-        return x_t , gamma_t
+        gamma_t  = self.gamma**t
+        beta_t   = self.beta
 
-    def backward(self, x , t):
-        """
-            Here we will need to use the nerual netowrk under the diffusion 
-        """
+        # Posterior mean
+        mean = (1/np.sqrt(1-beta_t)) * (
+            x_t - (beta_t/np.sqrt(1-gamma_t)) * eps_pred
+        )
 
-        # we want to predict the noise here
-        for _ in range(t):
-            pass
+        # Add noise for t>1
+        if t > 1:
+            noise = np.random.randn(*x_t.shape)
+        else:
+            noise = 0
 
-    def train():
-        pass
+        return mean + np.sqrt(beta_t)*noise
+
+    def sample(self, T, shape):
+        # Start from Gaussian noise
+        x = np.random.randn(*shape)
+        for t in range(T, 0, -1): #go backward t times
+            x = self.backward_step(x, t)
+        return x
+    
+    def train(self, data, epochs=100, T=50, lr=1e-3):
+        n = data.shape[0]
+        for ep in range(1, epochs+1):
+            perm, total_loss = np.random.permutation(n), 0.0
+            for i in perm:
+                x0 = data[i]
+                # pick t, diffuse
+                t = np.random.randint(1, T+1)
+                x_t, eps, _ = self.forward_diffuse(x0, t)
+
+                # predict and loss
+                inp      = np.array([x_t, t])
+                eps_pred = self.mlp.forward(inp)
+                loss     = (eps_pred - eps)**2
+                total_loss += loss
+
+                # backprop through MLP
+                grad = 2*(eps_pred - eps)
+                self.mlp.backward(grad)
+
+                # SGD step
+                for layer in (self.mlp.l1, self.mlp.l2):
+                    layer.weight -= lr * layer.dW
+                    layer.bias   -= lr * layer.db
+
+            avg_loss = total_loss / n
+#            if ep % 10 == 0 or ep==1:
+            print(f"Epoch {ep}/{epochs} — loss: {avg_loss}")
