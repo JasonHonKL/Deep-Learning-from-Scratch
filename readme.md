@@ -5,3 +5,10 @@ Build your own deep learning network is the simpliest way to learn what is deep 
 This is far from efficienct compare to how it done in pytorch, yet I do think it is far enough for me to get used to the logic behind deep learning.
 
 If this repo can help you to learn don't forget to give me a little star. 
+
+
+Todo List:
+- [x] ANN / MLP 
+- [] CNN
+- [x] Diffusion with MLP
+- [] Transformer 
