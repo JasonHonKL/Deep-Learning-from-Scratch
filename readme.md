@@ -50,3 +50,5 @@ loss_after = np.mean((y_pred_after - y_true) ** 2)
 print(f"Loss after update: {loss_after:.4f}")
 
 ```
+
+See the [example/mlp.py](mlp.py) for MLP example using linear. 
