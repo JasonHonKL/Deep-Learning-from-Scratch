@@ -2,26 +2,6 @@
 import numpy as np
 
 ## We build convulution 2D 
-# Alex Net
-class CNN:
-    def __init__(self):
-        self.conv1 = Conv2D()
-        self.relu1 = LeakyRELU()
-        self.pool1 = MaxPool2D()
-        self.conv2 = Conv2D()
-        self.relu2 = LeakyRELU()
-        self.pool2 = MaxPool2D()
-        self.conv3 = Conv2D()
-        self.conv4 = Conv2D()
-        self.conv5 = Conv2D()
-        self.relu3 = LeakyRELU()
-        self.pool3 = MaxPool2D()
-        self.fc1 = Linear()
-        self.relu4 = LeakyRELU()
-        self.fc2 = Linear()
-        self.relu5 = LeakyRELU()
-        self.fc3 = Linear()
-
 # There are three eleemnt for a CNN neural network 
 # Convoulution Layer , Pooling Layer and Fully Connected Layer
 # 
@@ -76,14 +56,6 @@ class MaxPool2D:
         # Compute max over the patch dimensions (kernel_size x kernel_size)
         r = np.max(x_unfold, axis=(4, 5))
         return r
-
-
-class Linear:
-    pass 
-
-
-class Softmax:
-    pass 
 
 
 def unfold(x, kernel_size, stride, padding):
