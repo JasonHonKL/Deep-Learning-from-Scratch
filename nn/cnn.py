@@ -81,8 +81,6 @@ class MaxPool2D:
 class Linear:
     pass 
 
-class LeakyRELU:
-    pass 
 
 class Softmax:
     pass 
