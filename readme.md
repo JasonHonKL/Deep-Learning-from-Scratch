@@ -51,4 +51,4 @@ print(f"Loss after update: {loss_after:.4f}")
 
 ```
 
-See the [example/mlp.py](mlp.py) for MLP example using linear. 
+See the [/example/mlp.py](mlp.py) for MLP example using linear. 
