@@ -8,35 +8,52 @@ Reference:
     - Avoid dropout problem
     - Address internal covariate shift
 """
-class BatchNorm1D():
+class BatchNorm1D:
     def __init__(self , num_features):
         self.num_features = num_features
         self.epsilon = 0.0001 
         self.gamma = np.ones(num_features)
         self.beta = np.zeros(num_features)
         self.y = 0
+        self.x = None # TODO: safety check when calling forward
 
     def forward(self, x):
         """
             shape of x (n , d)
             shape of output (n,  d) 
         """
-        mean = x.mean(axis=0)
-        var = x.var(axis=0)
-        x_normalized = (x - mean) / np.sqrt(var + self.epsilon)
-        self.y = self.gamma * x_normalized + self.beta
-        return self.y
+        self.x = x
+        self.mean = x.mean(axis=0)
+        self.var = x.var(axis=0)
+        self.x_normalized = (x - self.mean) / np.sqrt(self.var + self.epsilon)
+        y = self.gamma * self.x_normalized + self.beta
+        return y
 
     def backward(self , loss):
-        pass
+        """
+            loss representing partial l / partial y ==> dimension [ n , num_offeatures ]
+            we want to find:
+                partial l / partial x
+                partial l / partial gamma
+                partial l / partial mu
+                partial l / partial sigma
+                partial l / partial x
+        """
+        dgamma = np.sum(loss * self.x_normalized, axis=0)
+        dbeta = np.sum(loss, axis=0)
 
+        # Gradient with respect to normalized input
+        d_x_hat = loss * self.gamma
 
-bn = BatchNorm1D(num_features=2)
+        # Standard deviation
+        std = np.sqrt(self.var + self.epsilon)
 
-# Sample input: 3 samples, 2 features
-x = np.array([[1, 2], [3, 4], [5, 6]])
+        # Gradient with respect to input x
+        mean_d_x_hat = np.mean(d_x_hat, axis=0)
+        mean_d_x_hat_x_normalized = np.mean(d_x_hat * self.x_normalized, axis=0)
+        dx = (d_x_hat - mean_d_x_hat - self.x_normalized * mean_d_x_hat_x_normalized) / std
 
-# Apply batch normalization
-y = bn.forward(x)
-print("Normalized output:")
-print(y)
+        return dx, dgamma, dbeta
+
+class BatchNorm2D:
+    pass
