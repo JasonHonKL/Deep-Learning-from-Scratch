@@ -8,12 +8,13 @@ class Linear:
         self.input_dim = input_dim
         self.output_dim = output_dim
         self.weight = np.random.randn(input_dim , output_dim)
+        self.bias = np.zeros(shape=(output_dim))
         self.x = None
         self.o = None
     
     def forward(self ,x):
         self.x =x 
-        self.o = np.einsum('ni,ij->nj' , x , self.weight)
+        self.o = np.einsum('ni,ij->nj' , x , self.weight) +self.bias
         return self.o
 
 
@@ -28,5 +29,6 @@ class Linear:
         """
         dw = np.einsum('no, ni -> io' , loss , self.x)
         dx = np.einsum('no, oj -> nj ' , loss , self.weight.T)
-        return dw , dx
+        db = np.sum(loss, axis=0)
+        return dw , dx , db
 
