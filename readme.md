@@ -10,9 +10,9 @@ If this repo can help you to learn don't forget to give me a little star.
 
 Todo List:
 - [x] ANN / MLP 
-- [] CNN
+- [ ] CNN
 - [x] Diffusion with MLP
 - [x] Transformer 
 
-    - [] Vision Transformer (if available)
-- [] RNN & LSTM
+    - [ ] Vision Transformer (if available)
+- [ ] RNN & LSTM
