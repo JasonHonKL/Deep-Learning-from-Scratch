@@ -1,2 +1,8 @@
 /__pycache__
 /.venv
+# Ignore Python bytecode cache directories
+__pycache__/
+
+# You can also ignore compiled Python files just in case
+*.pyc
+*.pyo
