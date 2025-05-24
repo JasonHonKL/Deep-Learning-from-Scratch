@@ -12,5 +12,6 @@ Todo List:
 - [] CNN
 - [x] Diffusion with MLP
 - [x] Transformer 
-    -[] Vision Transformer (if available)
+
+    - [] Vision Transformer (if available)
 - [] RNN & LSTM
