@@ -60,5 +60,39 @@ class Softmax:
         return dx
     
 
+class Sigmoid:
+    """
+        This function aims to provide a sigmoid class for the puspose of non linear layer 
+        input is a nxm array 
+        Output Dimension nxm array 
+    """
+    def __init__(self):
+        self.gradient = 0
+
+    def zero_grad(self):
+        self.gradient = 0 
+    
+    def sigmoid(self ,x):
+        return 1/(1+ np.exp(-x))
+    """
+        Call the sigmod 
+        given x it will elementwise run the vector multiplication 
+    """
+    def forward(self,x):
+        vectorized_sigmoid = np.vectorize(self.sigmoid)
+        return vectorized_sigmoid(x) 
+    
+    """
+        Backward pass: given the forward x --> calculate the gradient give gradient from above layer 
+        d sigmoid = (1- sigmoid)(sigmoid)
+    """
+    def backward(self, x, g):
+        # Compute sigmoid output for the forward pass
+        sig = self.sigmoid(x)
+        # Gradient through sigmoid: g * sigmoid(x) * (1 - sigmoid(x))
+        grad = g * sig * (1 - sig)
+        return grad
+
+
 class Tanh:
     pass

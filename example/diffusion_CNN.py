@@ -1,7 +1,7 @@
 import numpy as np 
 
 from nn.cnn import Conv2D , MaxPool2D 
-from nn.mlp import Linear 
+from nn.linear import Linear 
 
 
 
@@ -16,7 +16,7 @@ class CNN:
             We need to use Conv1D 
         """
         pass 
-    
+
 
     def forward(self , x , i):
         pass

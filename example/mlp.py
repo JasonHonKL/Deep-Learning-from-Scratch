@@ -2,7 +2,7 @@
 
 from nn.linear import Linear
 from nn.activation import LeakyRelu
-from  nn.mlp import MSELoss
+from  nn.loss import MSELoss
 import numpy as np
 
 class MLP:
