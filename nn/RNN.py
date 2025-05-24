@@ -30,6 +30,16 @@ class RNN:
             ==> expected return dl/dxh , dl/dwhh , dl/dwhy 
             we have to get every thing in order to update the weight matrix and the bias matrix
         """
-
         pass 
 
+class LSTM:
+    """
+        The key difference between LSTM and simple RNN is instead of directly use tanh 
+        they would use:
+            - forget gate 
+            - Input gate
+            - Output gate
+            - Cell memory
+    """
+    def __init__(self):
+        pass
