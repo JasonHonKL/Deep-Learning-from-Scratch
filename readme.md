@@ -4,6 +4,8 @@ Build your own deep learning network is the simpliest way to learn what is deep 
 
 This is far from efficienct compare to how it done in pytorch, yet I do think it is far enough for me to get used to the logic behind deep learning.
 
+However this library is totally not for the purpose of production. It is just for us to learn about the mechanism behind. For deail and production usage one should use a more well developed library ! 
+
 If this repo can help you to learn don't forget to give me a little star. 
 
 

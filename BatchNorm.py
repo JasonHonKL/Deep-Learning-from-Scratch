@@ -1,1 +1,0 @@
-# This file aims to provide library related to batch normalization

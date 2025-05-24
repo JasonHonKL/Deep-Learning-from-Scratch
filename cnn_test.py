@@ -1,5 +1,5 @@
 # test CNN
-from cnn import Conv2D , unfold , MaxPool2D
+from nn.cnn import Conv2D , unfold , MaxPool2D
 import numpy as np
 
 # Test Conv2D
